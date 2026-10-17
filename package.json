@@ -1,0 +1,19 @@
+{
+  "name": "pingroom-starter-on-call-router",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Route a new incident to the PingRoom room covering the current UTC shift.",
+  "license": "MIT",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node scripts/router.mjs route",
+    "plan": "node scripts/router.mjs plan",
+    "status": "node scripts/router.mjs status",
+    "resolve": "node scripts/router.mjs resolve",
+    "connect": "node scripts/connect.mjs",
+    "demo": "node scripts/demo.mjs",
+    "test": "node --test"
+  },
+  "dependencies": { "@pingroom/cli": "0.12.0" }
+}

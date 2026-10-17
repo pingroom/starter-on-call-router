@@ -1,0 +1,7 @@
+{
+  "id": "incident-2030-1042",
+  "occurredAt": "2030-10-17T15:59:00.000Z",
+  "title": "New incident",
+  "message": "A scheduled data import needs investigation.",
+  "url": "https://example.com/incidents/1042"
+}

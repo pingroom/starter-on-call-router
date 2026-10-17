@@ -1,0 +1,8 @@
+{
+  "maxAgeSeconds": 900,
+  "stateDirectory": ".routing",
+  "shifts": [
+    { "id": "day-2030-10-17", "startsAt": "2030-10-17T08:00:00.000Z", "endsAt": "2030-10-17T16:00:00.000Z", "room": "DAYTEAM12345" },
+    { "id": "night-2030-10-17", "startsAt": "2030-10-17T16:00:00.000Z", "endsAt": "2030-10-18T08:00:00.000Z", "room": "NIGHTEAM1234" }
+  ]
+}

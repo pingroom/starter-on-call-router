@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.*
+!.env.example
+.pingroom/
+.routing/
+/config.json
+/incidents/
+*.tmp
+.DS_Store
