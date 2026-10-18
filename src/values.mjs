@@ -56,4 +56,8 @@ export function selectShift(policy, incident, now) {
   if (!shift) throw new Error('No shift covers the current time; nothing was sent.');
   return shift;
 }
-export const parseJson = buffer => JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(buffer));
+export function parseJson(buffer) {
+  try { return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(buffer)); }
+  // JSON syntax errors can contain fragments of the incident body.
+  catch { throw new Error('Input must be valid UTF-8 JSON.'); }
+}

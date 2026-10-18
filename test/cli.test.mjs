@@ -1,8 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import { copyFile, cp, mkdtemp, mkdir, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import { sendIncident } from '../src/cli.mjs';
 import { incident, shifts, notification } from '../fixtures/helpers.mjs';
+const exec = promisify(execFile);
 async function server(t, handler) {
   const value = createServer(handler);
   await new Promise(resolve => value.listen(0, '127.0.0.1', resolve));
@@ -38,4 +45,33 @@ test('real CLI timeout after observed request is an uncertain outcome', async t 
   const connection = await server(t, (_req, _res) => { seen = true; });
   await assert.rejects(sendIncident(incident, shifts[0], connection, { timeoutMs: 3000 }), /unknown/);
   assert.equal(seen, true);
+});
+
+for (const command of ['route', 'plan']) test(`${command} rejects malformed incident JSON without exposing content or changing receipts`, async t => {
+  const root = fileURLToPath(new URL('..', import.meta.url));
+  const directory = await mkdtemp(join(tmpdir(), 'on-call-invalid-json-'));
+  t.after(() => rm(directory, { recursive: true, force: true }));
+  await cp(join(root, 'src'), join(directory, 'src'), { recursive: true });
+  await mkdir(join(directory, 'scripts'));
+  await copyFile(join(root, 'scripts/router.mjs'), join(directory, 'scripts/router.mjs'));
+  await copyFile(join(root, 'config.example.json'), join(directory, 'config.json'));
+  await symlink(join(root, 'node_modules'), join(directory, 'node_modules'), process.platform === 'win32' ? 'junction' : 'dir');
+  const stateDirectory = join(directory, '.routing');
+  await mkdir(stateDirectory);
+  const state = '{"version":1,"binding":"existing-receipts-marker","records":[]}\n';
+  await writeFile(join(stateDirectory, 'state.json'), state);
+  await writeFile(join(directory, 'incident.json'), '{"message":PRIVATE_INCIDENT_MARKER}');
+
+  await assert.rejects(exec(process.execPath, ['scripts/router.mjs', command, 'incident.json'], {
+    cwd: directory,
+    env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, CI: 'true', PINGROOM_NO_UPDATE_CHECK: '1' },
+  }), error => {
+    assert.equal(error.code, 1);
+    assert.equal(error.stdout, '');
+    assert.doesNotMatch(error.stderr, /PRIVATE|message/);
+    assert.equal(error.stderr, 'Input must be valid UTF-8 JSON.\n');
+    return true;
+  });
+  assert.equal(await readFile(join(stateDirectory, 'state.json'), 'utf8'), state);
+  assert.deepEqual(await readdir(stateDirectory), ['state.json']);
 });
