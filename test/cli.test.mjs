@@ -22,7 +22,8 @@ test('real pinned CLI sends only to the frozen room with explicit token and inci
     calls++; path = req.url; auth = req.headers.authorization;
     const chunks = []; for await (const chunk of req) chunks.push(chunk);
     body = JSON.parse(Buffer.concat(chunks));
-    res.setHeader('Content-Type', 'application/json'); res.end(JSON.stringify({ success: true, notification_id: notification.notificationId }));
+    // The agent route answers 201 with the created notification row; its `id` is the notification ID.
+    res.writeHead(201, { 'Content-Type': 'application/json' }); res.end(JSON.stringify({ id: notification.notificationId, type: 'sent' }));
   });
   const saved = { webhook: process.env.PINGROOM_WEBHOOK_URL, api: process.env.PINGROOM_API_URL, room: process.env.PINGROOM_ROOM };
   process.env.PINGROOM_WEBHOOK_URL = 'http://127.0.0.1:1/never'; process.env.PINGROOM_API_URL = 'http://127.0.0.1:1'; process.env.PINGROOM_ROOM = 'WRONGROOM';
